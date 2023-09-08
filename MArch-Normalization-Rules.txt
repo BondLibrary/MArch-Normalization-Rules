@@ -1,0 +1,236 @@
+rule "correct LDR positions"
+when
+   TRUE
+then
+replaceControlContents "LDR.{5,1}" with "n"
+replaceControlContents "LDR.{6,1}" with "a"
+replaceControlContents "LDR.{7,1}" with "m"
+replaceControlContents "LDR.{17,1}" with "L"
+replaceControlContents "LDR.{18,1}" with "a"
+end
+ 
+// set date in 008//
+rule "populate 008 7-10 with date 2023"
+when
+(exists '264.c.*2023*')
+then
+replaceControlContents "008.{7,4}" with "2023"
+end
+rule "populate 008 7-10 with date 2024"
+when
+(exists '264.c.*2024*')
+then
+replaceControlContents "008.{7,4}" with "2024"
+end
+rule "populate 008 7-10 with date 2025"
+when
+(exists '264.c.*2025*')
+then
+replaceControlContents "008.{7,4}" with "2025"
+end
+ 
+//008 populate//
+rule "populate 008"
+when
+TRUE
+then
+replaceControlContents "008.{23,1}" with "o"
+replaceControlContents "008.{24,1}" with "m"
+replaceControlContents "008.{29,1}" with "0"
+replaceControlContents "008.{30,1}" with "0"
+replaceControlContents "008.{31,1}" with "|"
+replaceControlContents "008.{39,1}" with "d"
+end
+ 
+//Creator 100 tag //
+rule "Fix 100 indicators"
+when
+  TRUE
+then
+changeFirstIndicator "100" to "1"
+end 
+ 
+rule "add author subfield e"
+when
+  not exists "100.e"
+then
+addSubField "100.e.author"
+suffix "100.a" with ", "
+end 
+ 
+//245 tag punctuation//
+rule "fix 245 when it has sub-fields a and b"
+when 
+(exists "245.a.*" ) and (exists "245.b.*") and (not exists "245.c.*") 
+then
+suffix "245.a" with " :" if (not exists "245.a.*:")
+end
+ 
+//Subject heading//
+rule "add subject heading for Architecture Dissertations"
+when
+TRUE
+then
+addField "650.{-,0}.a.Architecture" if (not exists "650.a.Architecture*")
+addSubField "650.v.Dissertations" if (not exists "650.v.Dissertations*")
+end
+ 
+ 
+// Added entry thesis details //
+rule "Fix 710 indicators"
+when
+TRUE
+then
+changeFirstIndicator "710" to "2"
+end 
+ 
+rule "insert 710 for Institution and Faculty"
+when
+   not exists "710"
+then
+addField "710.a.Institution,"
+addSubField "710.b.School of Architecture,"
+addSubField "710.e.Degree granting institution"
+end
+ 
+ 
+rule "add thesis note"
+when
+   not exists "502"
+then
+addField "502.a.Thesis (MArch) -- Institution, "
+suffixSubField "502.a" with "264.c"
+end
+ 
+//Create 542 g from 264c//
+rule "copy the date and insert as copyright date in 542"
+when
+not exists "542.g"
+then
+addField "542.g.©"
+suffixSubField "542.g" with "264.c"
+combineFields "542" excluding ""
+end
+ 
+ 
+//264 tag publication details//
+rule "move subfield c to the end" 
+when 
+TRUE
+then
+moveSubfieldsToEndOfField "264" "c" 
+end
+ 
+rule "insert institution as publisher and reformat the date"
+when 
+exists "264.c" 
+then
+replaceContents "264.c.*/" with ""
+addSubField "264.a.City, State.:" if (not exists "264.a")
+addSubField "264.b.Institution University,"  if (not exists "264.b")
+changeSecondIndicator "264" to "1"
+end
+ 
+ 
+ 
+ 
+//OpenAccess indicator and CC licence urls//
+ 
+rule "add 506 tag for unrestricted access note"
+when
+exists "540.f.*CC*"
+then
+addField "506.f.Unrestricted online access" if (not exists "506.f.*")
+addSubField "506.2.star" if (not exists "506.2.*")
+end
+ 
+rule "add 540 subfield a introduction"
+when
+exists "540.f.*CC*"
+then
+addSubField "540.a.This work is licenced under Creative Commons " if (not exists "540.a.*")
+moveSubfieldsToEndOfField "540" "fu" 
+end
+ 
+ 
+rule "insert URL for type of CC licence"
+when
+TRUE
+then
+addSubField "540.u.https://creativecommons.org/licenses/by/4.0" if (exists "540.f.*CC BY 4.0*")
+addSubField "540.u.https://creativecommons.org/licenses/by-nc/4.0" if (exists "540.f.*CC BY-NC 4.0*")
+addSubField "540.u.https://creativecommons.org/licenses/by-nd/4.0" if (exists "540.f.*CC BY-ND 4.0*")
+addSubField "540.u.https://creativecommons.org/licenses/by-nc-sa/4.0" if (exists "540.f.*CC BY-NC-SA 4.0*")
+addSubField "540.u.https://creativecommons.org/licenses/by-nc-nd/4.0" if (exists "540.f.*CC BY-NC-ND 4.0*")
+addSubField "540.u.https://creativecommons.org/licenses/by-sa/4.0" if (exists "540.f.*CC BY-SA 4.0*")
+addSubField "540.u.https://creativecommons.org/publicdomain/zero/1.0/" if (exists "540.f.*CC0 1.0*")
+end
+ 
+ 
+//Copyright owner data to 542"
+rule "copy 100a to 542a"
+when
+not exists "542.a"
+then
+copyField "100.a" to "542.a"
+end
+ 
+//copyright owner email address in a local field//
+rule "add copyright owner context to 942e"
+when
+exists "942.e.*"
+then
+prefix "942.e" with "Copyright owner contact: " if (not exists "942.e.Copyright*")
+addSubField "942.a.Move this information to a private note in the representation and delete from the bib record for confidentiality" if (not exists "942.a.Move*")
+end
+ 
+//3xx tags//
+rule "add 366"
+when
+TRUE
+then
+addField "336.a.text" if (not exists "336.a")
+addSubField "336.b.txt" if (not exists "336.b")
+addSubField "336.2.rdacontent" if (not exists "336.2")
+end
+ 
+rule "add 337"
+when
+TRUE
+then
+addField "337.a.computer file" if (not exists "337.a")
+addSubField "337.b.c" if (not exists "337.b")
+addSubField "337.2.rdamedia" if (not exists "337.2")
+end
+ 
+rule "add 338"
+when
+TRUE
+then
+addField "338.a.online resources" if (not exists "338.a")
+addSubField "338.b.cr" if (not exists "338.b")
+addSubField "338.2.rdacarrier" if (not exists "338.2")
+end
+ 
+rule "add 300"
+when
+TRUE
+then
+addField "300.a.1 online resource" if (not exists "300.a")
+end
+ 
+//Cataloguing agency//
+rule "insert agency code in 040 and set language"
+when
+(not exists "040")
+then
+addField "040.a.CODE"
+addSubField "040.b.eng"
+addSubField "040.e.rda"
+end
+ 
+rule "populate 008 15-17 with place of publication que"
+when
+    TRUE
+then
+replaceControlContents "008.{15,3}" with "qea"
